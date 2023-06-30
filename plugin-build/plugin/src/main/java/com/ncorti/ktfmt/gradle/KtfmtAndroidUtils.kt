@@ -10,14 +10,9 @@ import org.gradle.api.tasks.TaskProvider
 
 internal object KtfmtAndroidUtils {
 
-    internal fun applyKtfmtToAndroidProject(
-        project: Project,
-        ktfmtExtension: KtfmtExtension,
-        topLevelFormat: TaskProvider<Task>,
-        topLevelCheck: TaskProvider<Task>
-    ) {
+    internal fun applyKtfmtToAndroidProject(context: KtfmtPluginContext) {
         fun applyKtfmtForAndroid() {
-            project.extensions.configure(BaseExtension::class.java) {
+            context.project.extensions.configure(BaseExtension::class.java) {
                 it.sourceSets.all { sourceSet ->
                     val srcDirs =
                         sourceSet.java.srcDirs +
@@ -33,20 +28,17 @@ internal object KtfmtAndroidUtils {
                     // current AndroidSourceSet, that are not available on eager
                     // evaluation.
                     createTasksForSourceSet(
-                        project,
+                        context,
                         sourceSet.name,
-                        project.files(Callable { srcDirs }),
-                        ktfmtExtension,
-                        topLevelFormat,
-                        topLevelCheck
+                        context.project.files(Callable { srcDirs }),
                     )
                 }
             }
         }
 
-        project.plugins.withId("com.android.application") { applyKtfmtForAndroid() }
-        project.plugins.withId("com.android.library") { applyKtfmtForAndroid() }
-        project.plugins.withId("com.android.test") { applyKtfmtForAndroid() }
-        project.plugins.withId("com.android.dynamic-feature") { applyKtfmtForAndroid() }
+        context.project.plugins.withId("com.android.application") { applyKtfmtForAndroid() }
+        context.project.plugins.withId("com.android.library") { applyKtfmtForAndroid() }
+        context.project.plugins.withId("com.android.test") { applyKtfmtForAndroid() }
+        context.project.plugins.withId("com.android.dynamic-feature") { applyKtfmtForAndroid() }
     }
 }

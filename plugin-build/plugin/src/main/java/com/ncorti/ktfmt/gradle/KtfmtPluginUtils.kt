@@ -19,35 +19,31 @@ internal object KtfmtPluginUtils {
 
     @Suppress("LongParameterList")
     internal fun createTasksForSourceSet(
-        project: Project,
+        context: KtfmtPluginContext,
         srcSetName: String,
-        srcSetDir: FileCollection,
-        ktfmtExtension: KtfmtExtension,
-        topLevelFormat: TaskProvider<Task>,
-        topLevelCheck: TaskProvider<Task>
+        srcSetDir: FileCollection
     ) {
-        val srcCheckTask = createCheckTask(project, ktfmtExtension, srcSetName, srcSetDir)
-        val srcFormatTask = createFormatTask(project, ktfmtExtension, srcSetName, srcSetDir)
+        val srcCheckTask = createCheckTask(context, srcSetName, srcSetDir)
+        val srcFormatTask = createFormatTask(context, srcSetName, srcSetDir)
 
         // When running together with compileKotlin, ktfmt tasks should have precedence as
         // they're editing the source code
-        project.tasks.withType(KotlinCompile::class.java).all {
+        context.project.tasks.withType(KotlinCompile::class.java).all {
             it.mustRunAfter(srcCheckTask, srcFormatTask)
         }
 
-        topLevelFormat.configure { task -> task.dependsOn(srcFormatTask) }
-        topLevelCheck.configure { task -> task.dependsOn(srcCheckTask) }
+        context.topLevelFormat.configure { task -> task.dependsOn(srcFormatTask) }
+        context.topLevelCheck.configure { task -> task.dependsOn(srcCheckTask) }
 
-        project.plugins.withType(LifecycleBasePlugin::class.java) {
-            project.tasks.named(LifecycleBasePlugin.CHECK_TASK_NAME).configure { task ->
+        context.project.plugins.withType(LifecycleBasePlugin::class.java) {
+            context.project.tasks.named(LifecycleBasePlugin.CHECK_TASK_NAME).configure { task ->
                 task.dependsOn(srcCheckTask)
             }
         }
     }
 
     private fun createCheckTask(
-        project: Project,
-        ktfmtExtension: KtfmtExtension,
+        context: KtfmtPluginContext,
         name: String,
         srcDir: FileCollection
     ): TaskProvider<KtfmtCheckTask> {
@@ -63,19 +59,18 @@ internal object KtfmtPluginUtils {
                 charArray.concatToString()
             }
         val taskName = "$TASK_NAME_CHECK$capitalizedName"
-        return project.tasks.register(taskName, KtfmtCheckTask::class.java) {
+        return context.project.tasks.register(taskName, KtfmtCheckTask::class.java) {
             it.description =
-                "Run Ktfmt formatter for sourceSet '$name' on project '${project.name}'"
+                "Run Ktfmt formatter for sourceSet '$name' on project '${context.project.name}'"
             it.setSource(srcDir)
             it.setIncludes(KtfmtPlugin.defaultIncludes)
             it.setExcludes(KtfmtPlugin.defaultExcludes)
-            it.bean = ktfmtExtension.toBean()
+            it.bean = context.ktfmtExtension.toBean()
         }
     }
 
     private fun createFormatTask(
-        project: Project,
-        ktfmtExtension: KtfmtExtension,
+        context: KtfmtPluginContext,
         name: String,
         srcDir: FileCollection
     ): TaskProvider<KtfmtFormatTask> {
@@ -91,13 +86,13 @@ internal object KtfmtPluginUtils {
                 charArray.concatToString()
             }
         val taskName = "$TASK_NAME_FORMAT$srcSetName"
-        return project.tasks.register(taskName, KtfmtFormatTask::class.java) {
+        return context.project.tasks.register(taskName, KtfmtFormatTask::class.java) {
             it.description =
-                "Run Ktfmt formatter validation for sourceSet '$name' on project '${project.name}'"
+                "Run Ktfmt formatter validation for sourceSet '$name' on project '${context.project.name}'"
             it.setSource(srcDir)
             it.setIncludes(KtfmtPlugin.defaultIncludes)
             it.setExcludes(KtfmtPlugin.defaultExcludes)
-            it.bean = ktfmtExtension.toBean()
+            it.bean = context.ktfmtExtension.toBean()
         }
     }
 }
