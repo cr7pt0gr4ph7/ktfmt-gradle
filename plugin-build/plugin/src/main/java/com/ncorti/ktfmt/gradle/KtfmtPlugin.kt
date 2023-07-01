@@ -13,13 +13,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
-internal data class KtfmtPluginContext(
-    val project: Project,
-    val ktfmtExtension: KtfmtExtension,
-    val topLevelFormat: TaskProvider<Task>,
-    val topLevelCheck: TaskProvider<Task>
-)
-
 /**
  * Top level class for the ktfmt-gradle plugin. Takes care of creating all the necessary classes
  * based on which other plugins are applied in the build.
