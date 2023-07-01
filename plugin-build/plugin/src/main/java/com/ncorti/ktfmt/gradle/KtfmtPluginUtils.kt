@@ -47,17 +47,7 @@ internal object KtfmtPluginUtils {
         name: String,
         srcDir: FileCollection
     ): TaskProvider<KtfmtCheckTask> {
-        val capitalizedName =
-            name.split(" ").joinToString("") {
-                val charArray = it.toCharArray()
-                if (charArray[0].isLowerCase()) {
-                    // We use toUpperCase here to retain compatibility with Gradle 6.9 and Kotlin
-                    // 1.4
-                    @Suppress("DEPRECATION")
-                    charArray[0] = charArray[0].toUpperCase()
-                }
-                charArray.concatToString()
-            }
+        val capitalizedName = toCapitalizedName(name)
         val taskName = "$TASK_NAME_CHECK$capitalizedName"
         return context.project.tasks.register(taskName, KtfmtCheckTask::class.java) {
             it.description =
@@ -74,18 +64,8 @@ internal object KtfmtPluginUtils {
         name: String,
         srcDir: FileCollection
     ): TaskProvider<KtfmtFormatTask> {
-        val srcSetName =
-            name.split(" ").joinToString("") {
-                val charArray = it.toCharArray()
-                if (charArray[0].isLowerCase()) {
-                    // We use toUpperCase here to retain compatibility with Gradle 6.9 and Kotlin
-                    // 1.4
-                    @Suppress("DEPRECATION")
-                    charArray[0] = charArray[0].toUpperCase()
-                }
-                charArray.concatToString()
-            }
-        val taskName = "$TASK_NAME_FORMAT$srcSetName"
+        val capitalizedName = toCapitalizedName(name)
+        val taskName = "$TASK_NAME_FORMAT$capitalizedName"
         return context.project.tasks.register(taskName, KtfmtFormatTask::class.java) {
             it.description =
                 "Run Ktfmt formatter validation for sourceSet '$name' on project '${context.project.name}'"
@@ -93,6 +73,19 @@ internal object KtfmtPluginUtils {
             it.setIncludes(KtfmtPlugin.defaultIncludes)
             it.setExcludes(KtfmtPlugin.defaultExcludes)
             it.bean = context.ktfmtExtension.toBean()
+        }
+    }
+
+    private fun toCapitalizedName(name: String): String {
+        return name.split(" ").joinToString("") {
+            val charArray = it.toCharArray()
+            if (charArray[0].isLowerCase()) {
+                // We use toUpperCase here to retain compatibility with Gradle 6.9 and Kotlin
+                // 1.4
+                @Suppress("DEPRECATION")
+                charArray[0] = charArray[0].toUpperCase()
+            }
+            charArray.concatToString()
         }
     }
 }
